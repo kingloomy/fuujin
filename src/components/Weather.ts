@@ -1,4 +1,22 @@
- //Get the weather phenomena category
+export const weatherObj : any = {
+  "day" : {
+    "normal" : ["lake_matsubara_on_a_morning_by_kawase_hasui"],
+    "foggy": ["morning_mist_by_hiroshige_utagawa"],
+    "overcast": ["shimabara_kujukushima_by_kawase_hasui", "the_pond_at_benten_shrine_in_hiba_by_kawase_hasui"],
+    "rain": ["sudden_shower_at_shōno_by_utagawa_hiroshige", "spring_rain_at_tsuchiyama_by_utagawa_hiroshige"],
+    "snow": ["snow_at_itsukushima_kawase_hasui"],
+    "thunder": [""]
+  },
+  "night" : {
+    "normal" : ["full_moon_over_a_mountain_landscape_by_utagawa_hiroshige"],
+    "foggy" : ["misty_mountains_by_suzuki_shōnen", "priest_nichiren_praying_for_the_restless_spirit_by_tsukioka_yoshitoshi"],
+    "overcast" : ["above_the_clouds_by_yoshida_hiroshi"],
+    "rain" : ["evening_rain_at_karasaki,_pine_tree_by_utagawa_hiroshige"],
+    "snow": ["the_gion_shrine_in_snow_utagawa_hiroshige"],
+    "thunder": [""]
+}}
+
+//Get the weather phenomena category
  export function getPhenom(code : number){
     switch(code){
       case 0: 
@@ -17,23 +35,6 @@
       default: 
         return "normal"
     }
-  }
-
-  //Get the sky coverage as string
-  export function getSky(code : number){
-    switch(code){
-      case 0:
-        return "clear"
-      case 1: case 2: case 51: case 53: case 71: case 80: case 81: case 85: case 86:
-        return "partly"
-      case 3: case 45: case 48:  case 56: case 57: case 61: case 63: case 65: case 73: 
-      case 75: case 77: case 82: case 95: case 96: case 99:
-        return "full"
-      case 55: case 66: case 67: case 69: case 75: case 99:
-        return "extreme"
-      default: 
-        return "clear"
-    } 
   }
 
   //Get current weather as string
@@ -70,6 +71,17 @@
       case 99: return "heavy thunderstorms"
       default: return "unknown"
     }
+  }
+
+  export function getPrint(weather : string, time : string){
+    const list : any = weatherObj[time][weather]
+    return list[Math.floor(Math.random() * list.length)]
+  }
+
+  export function getPrintName(print : any){
+    print = print.replaceAll('_', ' ')
+    const byline = print.split("by") 
+    return(byline)
   }
 
 //Render the weather icon by string concat

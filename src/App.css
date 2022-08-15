@@ -1,7 +1,7 @@
 :root {
   --value-light: rgb(255, 243, 203);
   --value-mid: rgb(172, 152, 152);
-  --value-dark: #666;
+  --value-dark: rgba(110, 105, 85, 0.705);
 
   --base-scale: clamp(1px, 1rem, 24px);
   --base-duration: 1s;
@@ -11,6 +11,14 @@
   margin: 0;
   padding: 0;
   color: var(--value-light);
+  filter: drop-shadow(1px 1px 0px rgba(43, 39, 9, 0.418));
+}
+
+html {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 3vmin;
+  text-transform: lowercase;
+  text-shadow: .1vmin .1vmin 0px rgba(43, 39, 9, 0.925), .2vmin .2vmin 0px rgba(43, 39, 9, 0.925), .3vmin .3vmin 0px rgba(43, 39, 9, 0.925);
 }
 
 :focus-visible {
@@ -18,21 +26,93 @@
   outline-offset: calc(var(--base-scale) * .25);
 }
 
-::placeholder {
-  color: var(--value-light);
-  opacity: 1;
-}
-
 button, input, ul {
   all: unset;
   list-style: none;
 }
 
-html {
-  font-family: Georgia;
-  font-size: 3vmin;
+a {
+  text-decoration: none;
+  transition: background-color .25s;
+}
+
+a:hover {
+  background-color: var(--value-dark);
+}
+
+h1, h2, h3 {
   text-transform: lowercase;
-  text-shadow: 1px 1px 0px rgba(43, 39, 9, 0.925), 2px 2px 0px rgba(43, 39, 9, 0.925), 3px 3px 0px rgba(43, 39, 9, 0.925);
+  color: var(--value-light);
+}
+
+h1 {
+  font-weight: 800;
+  font-size: calc(var(--base-scale) * 7);
+}
+
+h2{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: calc(var(--base-scale) * .75);
+  font-size: calc(var(--base-scale) * 2);
+}
+
+time, .search-box {
+  font-size: calc(var(--base-scale) * 2.3);
+  font-weight: 300;
+}
+
+p {
+  font-size: calc(var(--base-scale) * .89);
+  text-align: left;
+}
+
+cite {
+  display: block;
+}
+
+header, footer, main{
+  display: flex;
+  gap: var(--base-scale);
+  box-sizing: border-box;
+  height: 100%;
+}
+
+header, footer{
+  align-items: center;
+  justify-content: space-between;
+}
+
+main{
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  flex-direction: row;
+  padding: 0 0 2rem 0;
+}
+
+footer {
+  border-top: 1px solid var(--value-light);
+  font-size: calc(var(--base-scale) * 1.5);
+}
+
+section {
+  display: grid;
+  gap: .5rem;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--base-scale);
+  border: .5rem solid var(--value-light);
+  box-sizing: border-box;
+  height: 100vh;
+  font-size: calc(var(--base-scale) * 2);
+  background: center left / cover no-repeat url('assets/prints/lake_matsubara_on_a_morning_by_kawase_hasui.webp');
 }
 
 .stem {
@@ -43,81 +123,31 @@ html {
   padding: 0 2rem 0 2rem;
   height: 100vh;
   font-size: var(--base-scale);
+  background-position: center left;
+  background-size: cover;
   animation: fadeIn var(--base-duration);
 }
 
-header, footer, main {
-  display: flex;
-  flex-wrap: no-wrap;
-  gap: var(--base-scale);
-  box-sizing: border-box;
+.stem::after {
+  content: "";
+  position: absolute;
+  inset: 0 0;
+  width: 100%;
   height: 100%;
+  background-image: url(assets/colorspace_grain4.webp);
+  pointer-events: none;
 }
 
-header, footer{
-  justify-content: space-between;
-  align-items: center;
-}
-
-footer {
-  border-top: 1px solid var(--value-light);
-  font-size: calc(var(--base-scale) * 2);
-}
-
-main {
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  flex-wrap: no-wrap;
-}
-
-h1, h2, h3 {
-  width: fit-content;
-  font-weight: 800;
-  text-transform: lowercase;
+.search-box::placeholder {
   color: var(--value-light);
-}
-
-h1 {
-  font-size: calc(var(--base-scale) * 6);
-}
-
-h2 {
-  font-size: calc(var(--base-scale) * 2);
-}
-
-h3, time{
-  font-weight: 300;
-  font-size: calc(var(--base-scale) * 2);
-}
-
-.loader {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: var(--base-scale);
-  height: 100vh;
-  font-size: calc(var(--base-scale) * 2);
-}
-
-section{
-  padding-bottom: 2rem;
-}
-
-article {
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
-  align-items: center;
-  font-size: var(--base-scale);
-  text-align: center;
+  opacity: 1;
+  text-overflow: ellipsis;
 }
 
 .search-box {
   box-sizing: border-box;
   width: calc(var(--base-scale) * 15);
-  font-size: calc(var(--base-scale) * 2);
+  height: 1.5em;
   font-weight: 800;
   color: var(--value-light);
   cursor: pointer;
@@ -131,17 +161,47 @@ article {
   cursor: text;
 }
 
-.button {
-  opacity: .7;
-  outline: calc(var(--base-scale) * .25) dotted transparent;
-  border-radius: 100%;
-  padding: calc(var(--base-scale) * .5);
-  height: calc(var(--base-scale) * 3);
-  transition: opacity .25s;
+.search-box:focus::placeholder{
+  color: transparent;
+  text-shadow: none;
 }
 
-.button:hover {
-  opacity: 1;
-  animation: pop .1s 1 ease-in-out alternate;
-  cursor: pointer;
+.weather-icon{
+  position: relative;
+  margin: 0 0 0 1em;
+  width: 6em;
+  height: 6em;
+  border-radius: 50%;
+  font-size: calc(var(--base-scale) * .3);
+  background-color: transparent;
+}
+
+.artist{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: calc(var(--base-scale) * .5);
+  padding: .5rem;
+}
+
+.artist::before {
+  content: "🖌";
+}
+
+@media screen and (max-width: 600px) {
+  h1{
+    font-size: calc(var(--base-scale) * 10);
+  }
+}
+
+@keyframes fadeIn {
+  from{opacity:0;}
+  to{opacity:1;}
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes pop {
+      0%{transform: translateY(0);}
+      50%{transform: translateY(-1vmin);}
+      100%{transform: translateY(0);}
+  }
 }

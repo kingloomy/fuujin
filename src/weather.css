@@ -10,43 +10,46 @@
 }
 
 /* Weather Theme */
+[data-phenom]::after{
+    content: "";
+    position: absolute;
+    inset: 0 0;
+}
+[data-phenom]{
+    border: .6em solid var(--value-light);
+    filter: drop-shadow(.2em .2em 0px rgba(43, 39, 9, 0.925));
+}
+[data-phenom="overcast"]::after{
+    outline: .25em solid var(--value-light);
+    outline-offset: -1em;
+    border-radius: 50%;
+}
+[data-phenom="rain"]{
+    background-color: var(--value-light);
+}
+[data-phenom="foggy"]::after{
+    outline: 1em solid var(--value-light);
+    outline-offset: -3em;
+    border-radius: 50%;
+}
+[data-phenom="thunder"]::after{
+    border-radius: 40%;
+    background-color: var(--value-light);
+    clip-path: polygon(100% 50%, 100% 100%, 0 100%, 0 50%);
+}
+[data-phenom="snow"]::after{
+    top: -.38em;
+    content:"△";
+    font-size: 7em;
+    text-shadow: none;
+}
 [data-eventide]{
     background-size: cover;
-    background-position: center center;
+    background-position: center left;
 }
 [data-eventide="day"]{
     background-color: var(--value-light);
 }
 [data-eventide="night"]{
     background-color: var(--value-mid);
-}
-[data-phenom="normal"][data-eventide="day"]{
-    background-image: url(assets/prints/normal/day/A\ Fairy\ Moon\ and\ a\ Lonely\ Shore\,\ Unknown.webp);
-}
-[data-phenom="normal"][data-eventide="night"]{
-    background-image: url(assets/prints/normal/night/Full\ Moon\ Over\ a\ Mountain\ Landscape\,\ Hiroshige.webp);
-}
-[data-phenom="rain"][data-eventide="day"]{
-    background-image: url(assets/prints/rain/day/Sudden\ Shower\ at\ Shōno\,\ Hiroshige.webp);
-}
-[data-phenom="rain"][data-eventide="night"]{
-    background-image: url(assets/prints/rain/night/Evening\ Rain\ at\ Karasaki\,\ Pine\ Tree\,\ Hiroshige.webp);
-}
-[data-phenom="overcast"][data-eventide="day"]{
-    background-image: url(assets/prints/cloudy/day/Shimabara\ Kujukushima\,\ Kawase\ Hasui.webp);
-}
-[data-phenom="overcast"][data-eventide="night"]{
-    background-image: url(assets/prints/cloudy/night/Above\ the\ Clouds\,\ Yoshida\ Hiroshi.webp);
-}
-[data-phenom="foggy"][data-eventide="day"]{
-    background-image: url(assets/prints/foggy/day/Morning\ Mist\,\ Hiroshige.webp);
-}
-[data-phenom="foggy"][data-eventide="night"]{
-    background-image: url(assets/prints/foggy/night/Misty\ Mountains\,\ Suzuki\ Shonen.webp);
-}
-[data-phenom="snow"][data-eventide="day"]{
-    background-image: url(assets/prints/snow/day/Snow\ at\ Itsukushima\,\ Kawase\ Hasui.webp);
-}
-[data-phenom="snow"][data-eventide="night"]{
-    background-image: url(assets/prints/snow/night/The\ Gion\ Shrine\ in\ Snow\,\ Hiroshige.webp);
 }

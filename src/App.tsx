@@ -1,9 +1,21 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getDate, getWeather, getSky, getPhenom, getWeatherIcon, getTimeOfDay } from './components/Weather'
+import { getDate, getWeather, getPhenom, getPrint, getPrintName, getTimeOfDay } from './components/Weather'
 import './App.css'
 import './weather.css'
-import './animations.css'
+
+interface Forecast {
+  weather: string,
+  phenom: string,
+  time: string,
+  date: string,
+  print: Print
+}
+
+interface Print {
+  url: string,
+  metadata: string[]
+}
 
 interface GeoCode {
   lat: number,
@@ -13,6 +25,14 @@ interface GeoCode {
 const defaultCity = "Machiya"
 const defaultGeo: GeoCode = { lat: 0, long: 0 }
 const defaultDate = new Date()
+
+var forecast : Forecast = {
+  weather: "",
+  phenom: "",
+  time: "",
+  date: "",
+  print: {url: "", metadata: ["", ""]},
+}
 
 function buildLocationQuery(city: string) {
   return ("https://geocoding-api.open-meteo.com/v1/search?name=" + city)
@@ -44,18 +64,25 @@ function App() {
   //Weather status dependent upon getting locale
   const { status, data: weather } = useQuery(['weather', localeGeo, errorBool], async () => {
     const result: any = await fetch(buildWeatherQuery(localeGeo)).then(res => res.json())
+    if (result.latitude !== undefined) {
+
+      const randPrint = getPrint(getPhenom(result.current_weather.weathercode), getTimeOfDay(result.current_weather.time, result.daily.sunset[0], result.daily.sunrise[0]))
+      
+      forecast = {
+        weather: getWeather(result.current_weather.weathercode),
+        phenom: getPhenom(result.current_weather.weathercode),
+        time: getTimeOfDay(result.current_weather.time, result.daily.sunset[0], result.daily.sunrise[0]),
+        date: getDate(defaultDate, result.timezone),
+        print: {
+          url: randPrint,
+          metadata: getPrintName(randPrint)
+        }
+      }
+    }
     return result
   }, {
     enabled: !!localeGeo.lat
   })
-
-  const searchBar = (
-    <input type="text" className='search-box' placeholder={currentCity} onChange={e => setSearchQuery(e.target.value)} onKeyPress={e => (e.key === ('Enter' || 'Return') ? searchHandler() : null)} data-error={errorBool}></input>
-  )
-
-  function searchHandler() {
-    if (searchQuery != "") setCurrentCity(searchQuery)
-  }
 
   function checkCityCache() {
     const cachedCity = localStorage.getItem('city')
@@ -63,28 +90,36 @@ function App() {
     return cachedCity
   }
 
+  const searchBar = (
+    <input type="text" className='search-box' placeholder={"✑ " + currentCity} onChange={e => setSearchQuery(e.target.value)} onKeyPress={e => (e.key === ('Enter' || 'Return') ? searchHandler() : null)} data-error={errorBool}></input>
+  )
+
+  function searchHandler() {
+    if (searchQuery != "") setCurrentCity(searchQuery)
+  }
+
   return (
     (errorBool) ?
       (<div className='loader'>
-        <h2><u>undel.la</u></h2>
+        <h2>undel.la</h2>
         <h3>location not found</h3>
         {searchBar}
       </div>)
       :
       ((status === "loading") ?
         <div className='loader'>
-          loading
+          <h2>loading</h2>
         </div>
         :
-        <div className='stem' data-sky={getSky(weather.current_weather.weathercode)} data-phenom={getPhenom(weather.current_weather.weathercode)} data-eventide={getTimeOfDay(weather.current_weather.time, weather.daily.sunset[0], weather.daily.sunrise[0])}>
+        <div className='stem' style={{backgroundImage: `url(/assets/prints/${forecast.print.url}.webp)`}}>
           <header>
             {searchBar}
-            <time>{getDate(defaultDate, weather.timezone)}</time>
+            <time>{forecast.date}</time>
           </header>
           <main>
             <section>
-              <h1>{weather.current_weather.temperature}°</h1>
-              <h3>{getWeather(weather.current_weather.weathercode)}</h3>
+                <h1>{weather.current_weather.temperature}°</h1>
+                <h2><figure className='weather-icon' data-phenom={forecast.phenom}></figure>{forecast.weather}</h2>
             </section>
           </main>
           <footer>
@@ -92,6 +127,12 @@ function App() {
               <li>{weather.daily.temperature_2m_max[0]} high</li>
               <li>{weather.daily.temperature_2m_min[0]} low</li>
             </ul>
+            <a className="artist" href={"https://duckduckgo.com/?q=" + forecast.print.metadata[0] + "by" + forecast.print.metadata[1] + "&ia=images"}>
+              <p>
+                <cite> {forecast.print.metadata[0]}</cite>
+                by {forecast.print.metadata[1]}
+              </p>
+            </a>
           </footer>
         </div>)
   )
