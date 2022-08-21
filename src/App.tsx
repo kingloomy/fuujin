@@ -1,38 +1,19 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getDate, getWeather, getPhenom, getPrint, getPrintName, getTimeOfDay } from './components/Weather'
-import './App.css'
-import './weather.css'
+import { Forecast, GeoCode, LocObj, City } from './scripts/utils'
+import { formatWeatherQuery } from './scripts/Weather'
+import './stylesheet.css'
 
-interface Forecast {
-  weather: string,
-  phenom: string,
-  time: string,
-  date: string,
-  print: Print
-}
-
-interface Print {
-  url: string,
-  metadata: string[]
-}
-
-interface GeoCode {
-  lat: number,
-  long: number,
-}
-
-const defaultCity = "Machiya"
+//Defaults for new sessions/no cache
+const defaultCity: string = "Machiya"
 const defaultGeo: GeoCode = { lat: 0, long: 0 }
-const defaultDate = new Date()
+const defaultDate: Date = new Date()
 
-var forecast : Forecast = {
-  weather: "",
-  phenom: "",
-  time: "",
-  date: "",
-  print: {url: "", metadata: ["", ""]},
-}
+//Cache ref
+const cachedCity = localStorage.getItem('city');
+
+var searchQuery: string = ""
+var forecast: Forecast
 
 function buildLocationQuery(city: string) {
   return ("https://geocoding-api.open-meteo.com/v1/search?name=" + city)
@@ -42,99 +23,161 @@ function buildWeatherQuery(locale: GeoCode) {
 }
 
 function App() {
-  const [errorBool, setErrorBool] = useState<boolean>(false)
+  const [errorBool, setErrorBool] = useState(false)
+  const [meteoToggle, setMeteoToggle] = useState(false)
+  const [navToggle, setNavToggle] = useState(false)
+  const [currentCity, setCurrentCity] = useState(cacheHandler())
+  const [activeZone, setActiveZone] = useState<City>()
+  const [print, setPrint] = useState<string>("")
 
-  const [currentCity, setCurrentCity] = useState(checkCityCache())
-  const [searchQuery, setSearchQuery] = useState("")
 
   //Get locale by city name
   const { data: locale } = useQuery(['locale', currentCity], async () => {
-    const result: any = await fetch(buildLocationQuery(currentCity)).then(res => res.json())
+    const result: LocObj = await fetch(buildLocationQuery(currentCity)).then(res => res.json())
     if (result.results === undefined) setErrorBool(true)
     if (result.results !== undefined) {
+      //Enables new query after no result
       setErrorBool(false)
+      setActiveZone(result.results[0])
+      //Store locally if valid
       localStorage.setItem('city', result.results[0].name)
     }
     return result
   })
 
   //Get locale lat/long for weather query
-  const localeGeo: GeoCode = (errorBool) ? defaultGeo : { lat: locale?.results[0].latitude, long: locale?.results[0].longitude }
+  const localeGeo: GeoCode = (errorBool) ? defaultGeo : { lat: activeZone?.latitude, long: activeZone?.longitude }
 
-  //Weather status dependent upon getting locale
-  const { status, data: weather } = useQuery(['weather', localeGeo, errorBool], async () => {
+  //Get weather by lat/long
+  const { status: weatherStatus } = useQuery(['weather', localeGeo], async () => {
     const result: any = await fetch(buildWeatherQuery(localeGeo)).then(res => res.json())
-    if (result.latitude !== undefined) {
-
-      const randPrint = getPrint(getPhenom(result.current_weather.weathercode), getTimeOfDay(result.current_weather.time, result.daily.sunset[0], result.daily.sunrise[0]))
-      
-      forecast = {
-        weather: getWeather(result.current_weather.weathercode),
-        phenom: getPhenom(result.current_weather.weathercode),
-        time: getTimeOfDay(result.current_weather.time, result.daily.sunset[0], result.daily.sunrise[0]),
-        date: getDate(defaultDate, result.timezone),
-        print: {
-          url: randPrint,
-          metadata: getPrintName(randPrint)
-        }
-      }
-    }
+    forecast = formatWeatherQuery(result, defaultDate)
+    setPrint(forecast.print.url)
     return result
   }, {
+    //Weather status dependent upon getting locale
     enabled: !!localeGeo.lat
   })
 
-  function checkCityCache() {
-    const cachedCity = localStorage.getItem('city')
+
+  function createLocaleList(locale: City[] | undefined) {
+    if (locale === undefined) return null
+    return (
+      locale.map((x, index) =>
+        (index < 6) ?
+          <button key={x.id} className="button --location"
+            data-active={(x.id === activeZone?.id) ? "true" : "false"}
+            onClick={() => { setActiveZone(x); setNavToggle(!navToggle) }}>
+            <span className='button --country'>{(x.country_code === undefined) ? "∴" : (x.country_code)}</span>
+            <strong>{x.name}</strong>  <em>{x.admin1}</em>
+          </button>
+          :
+          null
+      ))
+  }
+
+  function cacheHandler() {
     if (cachedCity === null) return defaultCity
     return cachedCity
   }
-
-  const searchBar = (
-    <input type="text" className='search-box' placeholder={"✑ " + currentCity} onChange={e => setSearchQuery(e.target.value)} onKeyPress={e => (e.key === ('Enter' || 'Return') ? searchHandler() : null)} data-error={errorBool}></input>
-  )
 
   function searchHandler() {
     if (searchQuery != "") setCurrentCity(searchQuery)
   }
 
+  const searchBar = (
+    <input type="search" className='search-bar'
+      placeholder={currentCity}
+      onChange={e => searchQuery = e.target.value}
+      onKeyPress={e => (e.key === ('Enter' || 'Return') ? searchHandler() : null)} />
+  )
+
+  const header = (
+    <header className='struct'>
+      <div className='location-box'>
+        <button data-active={navToggle} className="button --country" onClick={() => { setNavToggle(!navToggle); setMeteoToggle(false) }}>
+          {(activeZone?.country_code === undefined) ? "∴" : (activeZone?.country_code)}
+        </button>
+        {searchBar}
+      </div>
+      <time>{forecast?.date}</time>
+    </header>
+  )
+
+  const nav = (
+    <nav className='dropdown'>
+      {createLocaleList(locale?.results)}
+    </nav>
+  )
+
+  const meteo = (
+    <><div></div></>
+  )
+
+  const main = (
+    <main className='struct'>
+      <section className='section --today'>
+        <h1>{forecast?.current}°</h1>
+        <h2 className="weather-condition">
+          <figure className='weather-icon' data-phenom={forecast?.phenom}></figure>
+          {forecast?.weather}
+          {/*           <button data-active={meteoToggle} className='button --forecast' onClick={() => { setMeteoToggle(!meteoToggle); setNavToggle(false) }}>
+        <img src="/assets/calendar.svg" alt="forecast icon" />
+      </button> */}
+        </h2>
+      </section>
+    </main>
+  )
+
+  const footer = (
+    <footer className='struct'>
+      <ul>
+        <li>{forecast?.high} high</li>
+        <li>{forecast?.low} low</li>
+      </ul>
+      <a className="button --artist" target="_blank" href={"https://duckduckgo.com/?q=" + forecast?.print.metadata[0] + "by" + forecast?.print.metadata[1] + "&ia=images"}>
+        <p>
+          <cite> {forecast?.print.metadata[0]}</cite>
+          by {forecast?.print.metadata[1]}
+        </p>
+      </a>
+    </footer>
+  )
+
   return (
     (errorBool) ?
-      (<div className='loader'>
-        <h2>undel.la</h2>
+      (<div className='loader --error'>
         <h3>location not found</h3>
         {searchBar}
       </div>)
       :
-      ((status === "loading") ?
+      ((weatherStatus === "loading") ?
         <div className='loader'>
           <h2>loading</h2>
         </div>
         :
-        <div className='stem' style={{backgroundImage: `url(/assets/prints/${forecast.print.url}.webp)`}}>
-          <header>
-            {searchBar}
-            <time>{forecast.date}</time>
-          </header>
-          <main>
-            <section>
-                <h1>{weather.current_weather.temperature}°</h1>
-                <h2><figure className='weather-icon' data-phenom={forecast.phenom}></figure>{forecast.weather}</h2>
-            </section>
-          </main>
-          <footer>
-            <ul>
-              <li>{weather.daily.temperature_2m_max[0]} high</li>
-              <li>{weather.daily.temperature_2m_min[0]} low</li>
-            </ul>
-            <a className="artist" href={"https://duckduckgo.com/?q=" + forecast.print.metadata[0] + "by" + forecast.print.metadata[1] + "&ia=images"}>
-              <p>
-                <cite> {forecast.print.metadata[0]}</cite>
-                by {forecast.print.metadata[1]}
-              </p>
-            </a>
-          </footer>
-        </div>)
+        <div className='stem' style={{ backgroundImage: `url(/assets/prints/${print}.webp)` }}>
+          <>
+            {header}
+            {(navToggle) ?
+              <>
+                {nav}
+              </>
+              :
+              <>
+                {(meteoToggle) ?
+                  <>
+                    {meteo}
+                  </>
+                  :
+                  <>
+                    {main}
+                    {footer}
+                  </>
+                }</>}
+          </>
+        </div>
+      )
   )
 }
 
