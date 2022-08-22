@@ -59,7 +59,6 @@ function App() {
     enabled: !!localeGeo.lat
   })
 
-
   function createLocaleList(locale: City[] | undefined) {
     if (locale === undefined) return null
     return (
@@ -86,8 +85,10 @@ function App() {
   }
 
   const searchBar = (
-    <input type="search" className='search-bar'
-      placeholder={currentCity}
+    <input type="search"
+      className={"search-bar"}
+      data-error={errorBool}
+      placeholder={(errorBool) ? currentCity : activeZone?.name}
       onChange={e => searchQuery = e.target.value}
       onKeyPress={e => (e.key === ('Enter' || 'Return') ? searchHandler() : null)} />
   )
@@ -100,7 +101,10 @@ function App() {
         </button>
         {searchBar}
       </div>
-      <time>{forecast?.date}</time>
+      <button data-active={meteoToggle} className='button --forecast' onClick={() => { setMeteoToggle(!meteoToggle); setNavToggle(false) }}>
+        <img src="/assets/calendar.svg" alt="forecast icon" />
+        <time>{forecast?.date}</time>
+      </button>
     </header>
   )
 
@@ -121,20 +125,18 @@ function App() {
         <h2 className="weather-condition">
           <figure className='weather-icon' data-phenom={forecast?.phenom}></figure>
           {forecast?.weather}
-          {/*           <button data-active={meteoToggle} className='button --forecast' onClick={() => { setMeteoToggle(!meteoToggle); setNavToggle(false) }}>
-        <img src="/assets/calendar.svg" alt="forecast icon" />
-      </button> */}
         </h2>
+        <ul>
+          <li>{forecast?.high} high</li>
+          <li>{forecast?.low} low</li>
+        </ul>
       </section>
     </main>
   )
 
   const footer = (
     <footer className='struct'>
-      <ul>
-        <li>{forecast?.high} high</li>
-        <li>{forecast?.low} low</li>
-      </ul>
+      <span></span>
       <a className="button --artist" target="_blank" href={"https://duckduckgo.com/?q=" + forecast?.print.metadata[0] + "by" + forecast?.print.metadata[1] + "&ia=images"}>
         <p>
           <cite> {forecast?.print.metadata[0]}</cite>
@@ -144,40 +146,40 @@ function App() {
     </footer>
   )
 
-  return (
-    (errorBool) ?
-      (<div className='loader --error'>
-        <h3>location not found</h3>
-        {searchBar}
-      </div>)
-      :
-      ((weatherStatus === "loading") ?
-        <div className='loader'>
-          <h2>loading</h2>
-        </div>
+  const content = (
+    <>
+      {main}
+      {footer}
+    </>
+  )
+
+  const dropdown = (
+    (navToggle) ? <>{nav}</> : <>{meteo}</>
+  )
+
+  const loader = (
+    <div className='loader'>
+      {(errorBool) ?
+        <>
+          <h3>location not found</h3>
+          {searchBar}
+        </>
         :
-        <div className='stem' style={{ backgroundImage: `url(/assets/prints/${print}.webp)` }}>
-          <>
-            {header}
-            {(navToggle) ?
-              <>
-                {nav}
-              </>
-              :
-              <>
-                {(meteoToggle) ?
-                  <>
-                    {meteo}
-                  </>
-                  :
-                  <>
-                    {main}
-                    {footer}
-                  </>
-                }</>}
-          </>
-        </div>
-      )
+        <h2>loading</h2>
+      }
+    </div>
+  )
+
+  return (
+    (errorBool || weatherStatus === "loading") ?
+      <>{loader}</>
+      :
+      <div className='stem' style={{ backgroundImage: `url(/assets/prints/${print}.webp)` }}>
+        <>
+          {header}
+          {(navToggle || meteoToggle) ? <>{dropdown}</> : <>{content}</>}
+        </>
+      </div>
   )
 }
 

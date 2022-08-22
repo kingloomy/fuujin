@@ -64,14 +64,13 @@ main {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-end;
-  justify-content: flex-start;
+  justify-content: flex-end;
   flex-direction: row;
   padding: 0 0 2rem 0;
 }
 
 footer {
   border-top: 1px solid var(--value-light);
-  font-size: 1.5rem;
 }
 
 .loader {
@@ -151,12 +150,12 @@ footer {
   text-overflow: ellipsis;
 }
 
-.loader.--error>.search-bar::placeholder {
+[data-error="true"].search-bar::placeholder {
   text-align: center;
   color: rgb(255, 91, 91);
 }
 
-.loader.--error>.search-bar:focus::placeholder {
+[data-error="true"].search-bar:focus::placeholder {
   color: transparent;
   text-shadow: none;
 }
@@ -194,7 +193,6 @@ footer {
   align-items: center;
   box-sizing: border-box;
   user-select: none;
-
 }
 
 .button.--location {
@@ -209,13 +207,14 @@ footer {
 }
 
 .button.--forecast {
-  gap: .25rem;
-  padding: 0 .25rem 0 .25rem;
-  height: 2em;
-  font-size: 1.5rem;
+  gap: .75rem;
+  padding: .5rem;
+  width: max-content;
+  font-size: 1rem;
 }
 
 .button.--forecast img {
+  width: 2rem;
   filter: drop-shadow(2px 2px 1px rgb(61, 55, 31));
 }
 
@@ -248,7 +247,6 @@ footer {
 h1 {
   font-weight: 800;
   font-size: 6.235848rem;
-  font-family: Georgia, 'Times New Roman', Times, serif;
 }
 
 p {
@@ -351,42 +349,9 @@ cite {
 
 /* Device */
 @media (max-aspect-ratio: 12/16) {
-  header {
-    gap: 0;
-    height: 12rem;
-  }
-
-  .search-bar {
-    font-size: 3rem;
-  }
-/* 
   .button.--location {
     font-size: 1.5rem;
     overflow: hidden;
-  }
-*/
-  .button.--country {
-    border: .4rem solid var(--value-light);
-    width: 4rem;
-    aspect-ratio: 1/1;
-    font-size: 2rem;
-    margin: 0 1rem 0 0;
-  } 
-
-  time {
-    display: none;
-  }
-
-  section {
-    gap: 1rem;
-  }
-
-  h1 {
-    font-size: 8rem;
-  }
-
-  h2 {
-    font-size: 2rem;
   }
 }
 
