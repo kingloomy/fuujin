@@ -1,43 +1,42 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Forecast, GeoCode, LocObj, City } from './scripts/utils'
+import { Forecast, GeoCode, LocObj, City } from './scripts/Utils'
 import { formatWeatherQuery } from './scripts/Weather'
 import './stylesheet.css'
 
 //Defaults for new sessions/no cache
-const defaultCity: string = "Machiya"
+const defaultCity = "Machiya"
 const defaultGeo: GeoCode = { lat: 0, long: 0 }
 const defaultDate: Date = new Date()
 
 //Cache ref
 const cachedCity = localStorage.getItem('city');
 
-var searchQuery: string = ""
-var forecast: Forecast
-
 function buildLocationQuery(city: string) {
-  return ("https://geocoding-api.open-meteo.com/v1/search?name=" + city)
+  return (`https://geocoding-api.open-meteo.com/v1/search?name=${city}`)
 }
+
 function buildWeatherQuery(locale: GeoCode) {
-  return ("https://api.open-meteo.com/v1/forecast?latitude=" + locale.lat + "&longitude=" + locale.long + "&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=ms&precipitation_unit=inch&hourly=relativehumidity_2m&timezone=auto&timeformat=unixtime")
+  return (`https://api.open-meteo.com/v1/forecast?latitude=${locale.lat}&longitude=${locale.long}&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=ms&precipitation_unit=inch&hourly=relativehumidity_2m&timezone=auto&timeformat=unixtime`)
 }
 
 function App() {
-  const [errorBool, setErrorBool] = useState(false)
+  const [error, setError] = useState(false)
   const [meteoToggle, setMeteoToggle] = useState(false)
   const [navToggle, setNavToggle] = useState(false)
   const [currentCity, setCurrentCity] = useState(cacheHandler())
+  const [searchQuery, setSearchQuery] = useState("")
   const [activeZone, setActiveZone] = useState<City>()
-  const [print, setPrint] = useState<string>("")
+  const [forecast, setForecast] = useState<Forecast | undefined>(undefined)
 
 
   //Get locale by city name
   const { data: locale } = useQuery(['locale', currentCity], async () => {
     const result: LocObj = await fetch(buildLocationQuery(currentCity)).then(res => res.json())
-    if (result.results === undefined) setErrorBool(true)
+    if (result.results === undefined) setError(true)
     if (result.results !== undefined) {
       //Enables new query after no result
-      setErrorBool(false)
+      setError(false)
       setActiveZone(result.results[0])
       //Store locally if valid
       localStorage.setItem('city', result.results[0].name)
@@ -46,13 +45,12 @@ function App() {
   })
 
   //Get locale lat/long for weather query
-  const localeGeo: GeoCode = (errorBool) ? defaultGeo : { lat: activeZone?.latitude, long: activeZone?.longitude }
+  const localeGeo: GeoCode = (error) ? defaultGeo : { lat: activeZone?.latitude, long: activeZone?.longitude }
 
   //Get weather by lat/long
-  const { status: weatherStatus } = useQuery(['weather', localeGeo], async () => {
+  const { data: weather, status: weatherStatus } = useQuery(['weather', localeGeo], async () => {
     const result: any = await fetch(buildWeatherQuery(localeGeo)).then(res => res.json())
-    forecast = formatWeatherQuery(result, defaultDate)
-    setPrint(forecast.print.url)
+    setForecast(formatWeatherQuery(result, defaultDate))
     return result
   }, {
     //Weather status dependent upon getting locale
@@ -62,17 +60,24 @@ function App() {
   function createLocaleList(locale: City[] | undefined) {
     if (locale === undefined) return null
     return (
-      locale.map((x, index) =>
-        (index < 6) ?
-          <button key={x.id} className="button --location"
-            data-active={(x.id === activeZone?.id) ? "true" : "false"}
-            onClick={() => { setActiveZone(x); setNavToggle(!navToggle) }}>
-            <span className='button --country'>{(x.country_code === undefined) ? "∴" : (x.country_code)}</span>
-            <strong>{x.name}</strong>  <em>{x.admin1}</em>
-          </button>
-          :
-          null
+      locale.slice(0, 6).map((x) =>
+        <button key={x.id} className="button --location"
+          data-active={(x.id === activeZone?.id) ? "true" : "false"}
+          onClick={() => { setActiveZone(x); setNavToggle(!navToggle) }}>
+          <span className='button --country'>{(x.country_code === undefined) ? "∴" : (x.country_code)}</span>
+          <strong>{x.name}</strong>  <em>{x.admin1}</em>
+        </button>
       ))
+  }
+
+  function createForecast() {
+    return (
+      <li>
+        <h2 className="weather-condition">
+          test
+        </h2>
+      </li>
+    )
   }
 
   function cacheHandler() {
@@ -81,62 +86,61 @@ function App() {
   }
 
   function searchHandler() {
-    if (searchQuery != "") setCurrentCity(searchQuery)
+    if (searchQuery !== "") setCurrentCity(searchQuery)
   }
 
   const searchBar = (
     <input type="search"
       className={"search-bar"}
-      data-error={errorBool}
-      placeholder={(errorBool) ? currentCity : activeZone?.name}
-      onChange={e => searchQuery = e.target.value}
+      data-error={error}
+      placeholder={(error) ? currentCity : activeZone?.name}
+      onChange={e => setSearchQuery(e.target.value)}
       onKeyPress={e => (e.key === ('Enter' || 'Return') ? searchHandler() : null)} />
   )
 
   const header = (
-    <header className='struct'>
-      <div className='location-box'>
-        <button data-active={navToggle} className="button --country" onClick={() => { setNavToggle(!navToggle); setMeteoToggle(false) }}>
-          {(activeZone?.country_code === undefined) ? "∴" : (activeZone?.country_code)}
-        </button>
-        {searchBar}
-      </div>
+    <header>
+      <button data-active={navToggle} className="button --country" onClick={() => { setNavToggle(!navToggle); setMeteoToggle(false) }}>
+        {(activeZone?.country_code === undefined) ? "∴" : (activeZone?.country_code)}
+      </button>
+      {searchBar}
       <button data-active={meteoToggle} className='button --forecast' onClick={() => { setMeteoToggle(!meteoToggle); setNavToggle(false) }}>
-        <img src="/assets/calendar.svg" alt="forecast icon" />
         <time>{forecast?.date}</time>
       </button>
     </header>
   )
 
   const nav = (
-    <nav className='dropdown'>
+    <>
       {createLocaleList(locale?.results)}
-    </nav>
+    </>
   )
 
   const meteo = (
-    <><div></div></>
+    <ul>
+      {createForecast()}
+    </ul >
   )
 
   const main = (
-    <main className='struct'>
+    <main>
       <section className='section --today'>
         <h1>{forecast?.current}°</h1>
-        <h2 className="weather-condition">
-          <figure className='weather-icon' data-phenom={forecast?.phenom}></figure>
-          {forecast?.weather}
-        </h2>
-        <ul>
-          <li>{forecast?.high} high</li>
-          <li>{forecast?.low} low</li>
+        <ul className='range'>
+          <li>{forecast?.high} hi</li>
+          <li><hr /></li>
+          <li>{forecast?.low} lo</li>
         </ul>
       </section>
     </main>
   )
 
   const footer = (
-    <footer className='struct'>
-      <span></span>
+    <footer>
+      <h2 className="weather-condition">
+        <figure className='weather-icon' data-phenom={forecast?.phenom}></figure>
+        {forecast?.weather}
+      </h2>
       <a className="button --artist" target="_blank" href={"https://duckduckgo.com/?q=" + forecast?.print.metadata[0] + "by" + forecast?.print.metadata[1] + "&ia=images"}>
         <p>
           <cite> {forecast?.print.metadata[0]}</cite>
@@ -154,12 +158,14 @@ function App() {
   )
 
   const dropdown = (
-    (navToggle) ? <>{nav}</> : <>{meteo}</>
+    <nav className='dropdown'>
+      {(navToggle) ? <>{nav}</> : <>{meteo}</>}
+    </nav>
   )
 
   const loader = (
     <div className='loader'>
-      {(errorBool) ?
+      {(error) ?
         <>
           <h3>location not found</h3>
           {searchBar}
@@ -171,10 +177,10 @@ function App() {
   )
 
   return (
-    (errorBool || weatherStatus === "loading") ?
+    (error || weatherStatus === "loading") ?
       <>{loader}</>
       :
-      <div className='stem' style={{ backgroundImage: `url(/assets/prints/${print}.webp)` }}>
+      <div className='stem' style={{ backgroundImage: `url(/assets/prints/${forecast?.print.url}.webp)` }}>
         <>
           {header}
           {(navToggle || meteoToggle) ? <>{dropdown}</> : <>{content}</>}

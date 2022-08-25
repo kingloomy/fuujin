@@ -1,33 +1,33 @@
-import { Forecast } from './utils'
+import { Forecast } from './Utils'
 
 export const weatherObj : any = {
   "day" : {
-    "normal" : ["lake_matsubara_on_a_morning_by_kawase_hasui", "lake_shoji_by_tsuchiya_koitsu"],
-    "foggy": ["morning_mist_by_hiroshige_utagawa", "three_stations_by_utagawa_kuniyoshi"],
-    "overcast": ["shimabara_kujukushima_by_kawase_hasui", "the_pond_at_benten_shrine_in_hiba_by_kawase_hasui"],
-    "rain": ["sudden_shower_at_shōno_by_utagawa_hiroshige", "spring_rain_at_tsuchiyama_by_utagawa_hiroshige"],
+    "normal" : ["lake_matsubara_on_a_morning_by_kawase_hasui", "lake_shoji_by_tsuchiya_koitsu", "fushimi_inari_shrine_by_hasegawa_sadanobu_i"],
+    "foggy": ["morning_mist_by_hiroshige_utagawa", "three_stations_by_utagawa_kuniyoshi", "near_omuro_by_shotei_takahashi"],
+    "overcast": ["the_pond_at_benten_shrine_in_hiba_by_kawase_hasui", "cloudy_day_at_mizuki_-_ibaraki_prefecture_by_kawase_hasui"],
+    "rain": ["sudden_shower_at_shōno_by_utagawa_hiroshige", "spring_rain_at_tsuchiyama_by_utagawa_hiroshige", "a_river_in_the_rain_by_koho"],
     "snow": ["snow_at_itsukushima_kawase_hasui", "in_the_snow_storm_by_beisaku_taguchi"],
     "thunder": ["hashidate_uchû_kaminari_by_utagawa_kuniyoshi"]
   },
   "night" : {
     "normal" : ["full_moon_over_a_mountain_landscape_by_utagawa_hiroshige", "no_7_fujisawa_-_tokaido_by_utagawa_hiroshige", "kawasaki_-_the_tokugô_ferry_by_utagawa_hiroshige"],
-    "foggy" : ["misty_mountains_by_suzuki_shōnen", "priest_nichiren_praying_for_the_restless_spirit_by_tsukioka_yoshitoshi"],
-    "overcast" : ["above_the_clouds_by_yoshida_hiroshi", "summer_moon_at_miyajima_by_tsuchiya_koitsu"],
-    "rain" : ["evening_rain_at_karasaki,_pine_tree_by_utagawa_hiroshige", "suitengû_shrine_at_akabane_by_utagawa_hiroshige"],
+    "foggy" : ["moon_over_a_waterfront_house_by_koho", "priest_nichiren_praying_for_the_restless_spirit_by_tsukioka_yoshitoshi"],
+    "overcast" : ["summer_moon_at_miyajima_by_tsuchiya_koitsu"],
+    "rain" : ["evening_rain_at_karasaki,_pine_tree_by_utagawa_hiroshige", "suitengû_shrine_at_akabane_by_utagawa_hiroshige", "bridge_in_the_rain_by_koho"],
     "snow": ["the_gion_shrine_in_snow_utagawa_hiroshige", "46th_station_-_kameyama_by_utagawa_hiroshige"],
     "thunder": ["a_vision_of_prayer_on_the_waves_by_utagawa_kuniyoshi"]
 }}
 
 export function formatWeatherQuery(weatherQuery: any, date: Date) {
-  var newForecast: Forecast
+  let newForecast: Forecast
   const randPrint = getPrint(getPhenom(weatherQuery.current_weather.weathercode), getTimeOfDay(weatherQuery.current_weather.time, weatherQuery.daily.sunset[0], weatherQuery.daily.sunrise[0]))
 
   return (
     newForecast = {
       weather: getWeather(weatherQuery.current_weather.weathercode),
-      current: weatherQuery.current_weather.temperature,
-      high: weatherQuery.daily.temperature_2m_max[0],
-      low: weatherQuery.daily.temperature_2m_min[0],
+      current: Math.trunc(weatherQuery.current_weather.temperature),
+      high: Math.trunc(weatherQuery.daily.temperature_2m_max[0]),
+      low: Math.trunc(weatherQuery.daily.temperature_2m_min[0]),
       phenom: getPhenom(weatherQuery.current_weather.weathercode),
       time: getTimeOfDay(weatherQuery.current_weather.time, weatherQuery.daily.sunset[0], weatherQuery.daily.sunrise[0]),
       date: getDate(date, weatherQuery.timezone),
@@ -97,23 +97,20 @@ export function formatWeatherQuery(weatherQuery: any, date: Date) {
   }
 
   export function getPrint(weather : string, time : string){
-    const list : any = weatherObj[time][weather]
-    return list[Math.floor(Math.random() * list.length)]
+    const printList : any = weatherObj[time][weather]
+    return printList[Math.floor(Math.random() * printList.length)]
   }
 
   export function getPrintName(print : any){
-    print = print.replaceAll('_', ' ')
-    const byline = print.split("by") 
-    return(byline)
+    const byline = print.replaceAll('_', ' ').split("by") 
+    return byline
   }
 
 //Render the weather icon by string concat
 export function getWeatherIcon(time: number, sunset : number, sunrise : number, weather: number){
-    const timeOfDay : string = getTimeOfDay(time, sunset, sunrise);
-    const currentWeather : string = getWeather(weather);
-    return(
-      "/assets/icons/weather/" + (timeOfDay) + "/" + (currentWeather) + ".svg"
-    );
+    const timeOfDay = getTimeOfDay(time, sunset, sunrise);
+    const currentWeather = getWeather(weather);
+    return(`/assets/icons/weather/${(timeOfDay)}/${(currentWeather)}.svg`);
   }
 
 //Compare current UTC to sunset/sunrise
@@ -124,5 +121,6 @@ export function getTimeOfDay(time : number, sunset : number, sunrise : number){
 
   //Get current date as string
 export function getDate(date: any, timezone: any) {
-    return date.toLocaleDateString(Intl.DateTimeFormat().resolvedOptions().locale, { weekday: "short", day: "numeric", month: "short", timeZone: timezone })
+  const formattedDate = date.toLocaleDateString(Intl.DateTimeFormat().resolvedOptions().locale, {weekday: "short", day: "numeric", month: "short", timeZone: timezone})
+  return(formattedDate)
   }
