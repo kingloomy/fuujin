@@ -104,9 +104,7 @@ function App() {
         {(activeZone?.country_code === undefined) ? "∴" : (activeZone?.country_code)}
       </button>
       {searchBar}
-      <button data-active={meteoToggle} className='button --forecast' onClick={() => { setMeteoToggle(!meteoToggle); setNavToggle(false) }}>
-        <time>{forecast?.date}</time>
-      </button>
+      <time>{forecast?.date}</time>
     </header>
   )
 
